@@ -9,6 +9,7 @@ Currently, this app is in the alpha testing stage. However, there are multiple b
 To ensure the app works properly, run the following before starting to use the app:
 
 `pip install -r requirements.txt` 
+
 `python -m spacy download en_core_web_sm`
 
 AI Notice: AI has been used in the development of the majority part of this app, as this my first time developing an actual python app. I have usually developed complex Apple Shortcuts, but I ended up creating this app only to help me sort the myriads of files on my laptop.
