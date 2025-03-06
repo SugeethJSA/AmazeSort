@@ -26,11 +26,9 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt update && sudo apt full-upgrade -y && sudo apt install -y libegl1 libxkbcommon-x11-0 libxcb-cursor0 libxcb-xinerama0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinput0 libglib2.0-0 build-essential python3-dev python3-pip python3-venv libssl-dev libffi-dev libxml2-dev libxslt1-dev zlib1g-dev libpq-dev libjpeg-dev libfreetype6-dev libblas-dev liblapack-dev gfortran libpng-dev
-        python3 -m venv venv
-        source venv/bin/activate
+        pip install flake8 pytest
         python -m pip install --upgrade pip
         pip uninstall pycrypto
-        pip install flake8 pytest
         pip install -r requirements.txt
         python -m spacy download en_core_web_sm
   
