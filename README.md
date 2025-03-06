@@ -12,7 +12,9 @@ To ensure the app works properly, run the following before starting to use the a
 
 `python -m spacy download en_core_web_sm`
 
-AI Notice: AI has been used in the development of the majority part of this app, as this my first time developing an actual python app. I have usually developed complex Apple Shortcuts, but I ended up creating this app only to help me sort the myriads of files on my laptop.
+**AI Notice**: AI has been used in the development of the majority part of this app, as this my first time developing an actual python app. I have usually developed complex Apple Shortcuts, but I ended up creating this app only to help me sort the myriads of files on my laptop.
+
+An alpha version is available on the releases page for testing. It is very barebones, and only contains the essentials...
 
 ## Contributions and Licensing
 
