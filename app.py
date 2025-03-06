@@ -1,12 +1,24 @@
-import sys, os
-from PySide6 import QtCore
+import sys, os, subprocess
 from PySide6.QtCore import Qt, QRect, QCoreApplication
 from PySide6.QtWidgets import QSplashScreen, QApplication, QGraphicsDropShadowEffect
 from PySide6.QtGui import QPixmap, QPainter, QPainterPath, QGuiApplication, QIcon, QColor, QFont
 import PySide6.QtWidgets as QtWidgets
 
+# Determine the base directory
+if getattr(sys, 'frozen', False):  
+    base_dir = os.path.dirname(sys.executable)  # Running as an .exe
+else:
+    base_dir = os.path.dirname(os.path.abspath(__file__))  # Running as a .py script
+
+setup_path = os.path.join(base_dir, "gpu_setup.exe")
+
+try:
+    import torch
+except ImportError:
+    print("🚀 Running GPU setup...")
+    subprocess.run([setup_path])  # Run the setup script
+
 # Base directory (where app.py is located)
-base_dir = os.path.dirname(os.path.abspath(__file__))
 assets_dir = os.path.join(base_dir, "assets")
 
 class CustomSplashScreen(QSplashScreen):

@@ -11,7 +11,12 @@ import utils, traceback
 from PySide6.QtCore import Qt
 import logging
 
-Assets_Dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets")
+if getattr(sys, 'frozen', False):  
+    base_dir = os.path.dirname(sys.executable)  # Running as an .exe
+else:
+    base_dir = os.path.dirname(os.path.abspath(__file__))  # Running as a .py script
+
+Assets_Dir = os.path.join(os.path.dirname(base_dir, "assets"))
 Icons_Dir = os.path.join(Assets_Dir, "icons")
 
 class EmittingStream(QtCore.QObject):

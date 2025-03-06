@@ -1,6 +1,11 @@
 from PySide6 import QtWidgets, QtCore, QtGui
-import os
-base_dir = os.path.dirname(os.path.abspath(__file__))
+import os, sys
+
+if getattr(sys, 'frozen', False):  
+    base_dir = os.path.dirname(sys.executable)  # Running as an .exe
+else:
+    base_dir = os.path.dirname(os.path.abspath(__file__))  # Running as a .py script
+
 assets_dir = os.path.join(base_dir, "assets")
 icons_dir = os.path.join(assets_dir, "icons")
 

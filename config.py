@@ -1,14 +1,16 @@
 import json
-import os
+import os, sys
 
-# Get the directory where app.py is located
-app_dir = os.path.dirname(os.path.abspath(__file__))
+if getattr(sys, 'frozen', False):  
+    base_dir = os.path.dirname(sys.executable)  # Running as an .exe
+else:
+    base_dir = os.path.dirname(os.path.abspath(__file__))  # Running as a .py script
 
 # Construct the path to sorter_config.json
-CONFIG_FILE = os.path.join(app_dir, "sorter_config.json")
+CONFIG_FILE = os.path.join(base_dir, "sorter_config.json")
 
-GUIDEBOOK_FILE = os.path.join(app_dir, "syllabus.json")
-ASSOCIATIONS_FILE = os.path.join(app_dir, "associations.json")
+GUIDEBOOK_FILE = os.path.join(base_dir, "syllabus.json")
+ASSOCIATIONS_FILE = os.path.join(base_dir, "associations.json")
 
 DEFAULT_CONFIG = {
     "source_dirs": [],

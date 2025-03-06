@@ -6,6 +6,7 @@ logs/
 *.svg
 transformer_model/
 .vscode/
+site-packages/
 
 
 # Byte-compiled / optimized / DLL files
