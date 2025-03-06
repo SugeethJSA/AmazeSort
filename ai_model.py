@@ -1,11 +1,25 @@
-import os, pickle, json, torch
+import os, pickle, json, sys, logging
+
+APP_DIR = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.getcwd()
+SITE_PACKAGES = os.path.join(APP_DIR, "site-packages")
+
+# Add site-packages to sys.path so app.py can find the installed modules
+if SITE_PACKAGES not in sys.path:
+    sys.path.insert(0, SITE_PACKAGES)
+
+# Now app.py can import torch, torchvision, torchaudio, etc.
+try:
+    import torch
+    logging.info(f"Torch found! Version: {torch.__version__}")
+except ImportError:
+    logging.error("Torch not found. Make sure GPU installer ran successfully.")
+
 import numpy as np
 from sklearn.preprocessing import LabelEncoder
 from transformers import DistilBertForSequenceClassification, DistilBertTokenizerFast, Trainer, TrainingArguments, TrainerCallback
 from datasets import Dataset
-import ctypes, sys
+import ctypes
 from utils import prevent_sleep, allow_sleep
-import logging
 
 class CancellationCallback(TrainerCallback):
     def __init__(self, cancel_flag_func):
@@ -16,17 +30,33 @@ class CancellationCallback(TrainerCallback):
             control.should_save = True
 
 # Device selection update for CUDA support:
-if torch.cuda.is_available():
-    device = torch.device("cuda")
-    logging.info("Using CUDA for GPU acceleration.")
-else:
+import torch
+import logging
+
+def get_device():
+    """Detects the best available device for computation (CUDA, DirectML, ROCm, or CPU)."""
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
+        logging.info("✅ Using NVIDIA CUDA for GPU acceleration.")
+        return device
+
     try:
         import torch_directml
         device = torch_directml.device()
-        logging.info("Using torch-directml for GPU acceleration: " + str(device))
+        logging.info(f"✅ Using Intel/AMD DirectML for GPU acceleration: {device}")
+        return device
     except ImportError:
-        device = torch.device("cpu")
-        logging.info("Using CPU.")
+        logging.warning("⚠ torch-directml not found. Skipping DirectML support.")
+
+    if hasattr(torch, "has_rocm") and torch.has_rocm:
+        device = torch.device("rocm")
+        logging.info("✅ Using AMD ROCm for GPU acceleration.")
+        return device
+
+    logging.info("⚠ No GPU detected. Falling back to CPU.")
+    return torch.device("cpu")
+
+device = get_device()
 
 def build_training_dataset(guidebook, dictionary):
     texts = []

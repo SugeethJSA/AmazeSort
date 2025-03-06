@@ -16,7 +16,7 @@ if getattr(sys, 'frozen', False):
 else:
     base_dir = os.path.dirname(os.path.abspath(__file__))  # Running as a .py script
 
-Assets_Dir = os.path.join(os.path.dirname(base_dir, "assets"))
+Assets_Dir = os.path.join(base_dir, "assets")
 Icons_Dir = os.path.join(Assets_Dir, "icons")
 
 class EmittingStream(QtCore.QObject):

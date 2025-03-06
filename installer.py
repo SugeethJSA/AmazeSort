@@ -1,8 +1,9 @@
 import os
 import sys
 import subprocess
-from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QProgressBar, QPushButton, QTextEdit, QTextCursor
+from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QProgressBar, QPushButton, QTextEdit
 from PySide6.QtCore import Qt, QThread, Signal
+from PySide6.QtGui import QTextCursor
 
 # -------------------------------
 # CONFIGURATION
@@ -71,6 +72,7 @@ class GPUInstallerThread(QThread):
 
         if self.stop_flag:
             self.log.emit("❌ Installation Canceled.")
+            self.finished_signal.emit(False)  # Modified: notify cancellation
             return
 
         # Determine installation requirements
@@ -107,9 +109,13 @@ class GPUInstallerApp(QWidget):
 
         layout = QVBoxLayout()
 
-        self.label = QLabel("🔍 Detecting system GPU...")
+        self.label = QLabel("🔍 AmazeSort Dependencies Install Wizard")
         self.label.setAlignment(Qt.AlignCenter)
         layout.addWidget(self.label)
+
+        self.label1 = QLabel("\nTo run AmazeSort properly,\nwe need to install some app-specific GPU libraries.\nClick install to start installing!\n\n(May use 1-3 GB worth of storage.\nEnsure you have enough internet access and enough storage.)")
+        self.label1.setAlignment(Qt.AlignLeft)
+        layout.addWidget(self.label1)
 
         self.log_output = QTextEdit(self)
         self.log_output.setReadOnly(True)  # Prevent user edits
@@ -164,7 +170,7 @@ class GPUInstallerApp(QWidget):
     def update_log(self, message):
         """Updates the log output, sets the label, and auto-scrolls to the latest log"""
         self.log_output.append(message)
-        self.log_output.moveCursor(self.log_output.textCursor().End)  # Auto-scroll to bottom
+        self.log_output.moveCursor(QTextCursor.MoveOperation.End)  # Auto-scroll to bottom
         self.label.setText(message)  # Keep label in sync with latest status
 
     def on_installation_complete(self, success):

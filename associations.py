@@ -1,23 +1,63 @@
-import os, json, re, ctypes, sys, torch, utils
+import os, json, re, sys, utils, logging
+
+APP_DIR = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.getcwd()
+SITE_PACKAGES = os.path.join(APP_DIR, "site-packages")
+
+# Add site-packages to sys.path so app.py can find the installed modules
+if SITE_PACKAGES not in sys.path:
+    sys.path.insert(0, SITE_PACKAGES)
+
+# Now app.py can import torch, torchvision, torchaudio, etc.
+try:
+    import torch
+    logging.info(f"Torch found! Version: {torch.__version__}")
+except ImportError:
+    logging.error("Torch not found. Make sure GPU installer ran successfully.")
+
+import transformers, ctypes
 from transformers import pipeline
-import transformers
-import logging
 transformers.logging.set_verbosity_error()
 from utils import prevent_sleep, allow_sleep
 
 PARAPHRASER = None
+
+def get_best_device():
+    """Detects the best available device (CUDA, DirectML, ROCm, or CPU)."""
+    if torch.cuda.is_available():
+        logging.info("✅ Using NVIDIA CUDA for model inference.")
+        return 0  # CUDA device index
+
+    try:
+        import torch_directml
+        dml_device = torch_directml.device()
+        logging.info(f"✅ Using Intel/AMD DirectML for model inference: {dml_device}")
+        return dml_device
+    except ImportError:
+        logging.warning("⚠ torch-directml not found. Skipping DirectML support.")
+
+    if hasattr(torch, "has_rocm") and torch.has_rocm:
+        logging.info("✅ Using AMD ROCm for model inference.")
+        return "rocm"
+
+    logging.info("⚠ No GPU detected. Falling back to CPU.")
+    return -1  # CPU mode
+
 def get_paraphraser():
+    """Loads the T5 paraphrasing model on the best available device."""
     global PARAPHRASER
     if PARAPHRASER is None:
-        if torch.cuda.is_available():
+        device = get_best_device()
+        
+        try:
             PARAPHRASER = pipeline("text2text-generation",
                                    model="ramsrigouthamg/t5_paraphraser",
                                    tokenizer="ramsrigouthamg/t5_paraphraser",
-                                   device=0)
-        else:
-            PARAPHRASER = pipeline("text2text-generation",
-                                   model="ramsrigouthamg/t5_paraphraser",
-                                   tokenizer="ramsrigouthamg/t5_paraphraser")
+                                   device=device if isinstance(device, int) else -1)  # CPU fallback for non-CUDA
+            logging.info("✅ Paraphraser model loaded successfully.")
+        except Exception as e:
+            logging.error(f"❌ Failed to load paraphraser model: {e}")
+            PARAPHRASER = None  # Ensures it doesn't return a broken instance
+
     return PARAPHRASER
 
 def prevent_sleep():

@@ -11,9 +11,7 @@ sentencepiece
 PyPDF2
 fuzzywuzzy
 pycryptodome
-spacy
 tf-keras
 tensorflow
-sqlalchemy 
-mutagen
 tqdm
+accelerate
