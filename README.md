@@ -1,6 +1,10 @@
-# AmazeSort
+<h1 align="center">AmazeSort</h1>
+<p align="center">
+<a href="https://github.com/SugeethJSA/AmazeSort/actions/workflows/python-app.yml"> <img src="https://github.com/SugeethJSA/AmazeSort/actions/workflows/python-app.yml/badge.svg"></a> 
+</p>
+<p align="center">
 A Python-based app to sort files using rule-based, hybrid-approach and/or fully AI-based approach to sort files.
-Current Head Maintainer: SugeethJSA
+</p>
 
 ## Note: 
 
@@ -8,13 +12,16 @@ Currently, this app is in the alpha testing stage. However, there are multiple b
 
 To ensure the app works properly, run the following before starting to use the app:
 
-`pip install -r requirements.txt` 
-
-`python -m spacy download en_core_web_sm`
+```
+pip install -r requirements.txt
+python -m spacy download en_core_web_sm
+```
 
 **AI Notice**: AI has been used in the development of the majority part of this app, as this my first time developing an actual python app. I have usually developed complex Apple Shortcuts, but I ended up creating this app only to help me sort the myriads of files on my laptop.
 
 An alpha version is available on the releases page for testing. It is very barebones, and only contains the essentials...
+
+**Current Head Maintainer:** SugeethJSA
 
 ## Contributions and Licensing
 
@@ -40,7 +47,6 @@ We have three modes:
 2. Hybrid approach (traditional, but uses an Associations.json created by transformer models to sort files)
 3. AI-based approach
 
-# AmazeSort Knowledge Transfer Document
 
 ## Overview
 
@@ -136,7 +142,7 @@ GPU: Intel iRIS Xe Graphics
   - **File Movement:** Moves files to their target directories and logs each operation.
   - **Duplicate Handling:** Checks for duplicates and either skips or renames them based on configuration.
 
-### 6. **UI Module (********`main_ui.py`******** and ********`settings_dialog.py`******** )**
+### 6. **UI Module (********`main_ui.py`****** and ********`settings_dialog.py`******** )
 
 - **Purpose:**\
   Provides a modern, attractive user interface using PySide6 (with a Fluent/Material-inspired design) to manage configuration, initiate training and sorting, and display logs and progress.
