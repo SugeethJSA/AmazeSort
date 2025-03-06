@@ -1,5 +1,6 @@
 # **Contributor License Agreement (CLA)**  
-Version 1/
+Version 1
+
 Updated on March 06, 2025 at 12:04 PM.
 
 ## **1. Definitions**  
