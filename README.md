@@ -53,9 +53,12 @@ We have three modes:
 **AmazeSort** is supposed to be an enterprise-grade file sorter application that organizes educational files (and other types) into a structured directory based on user-defined rules, enriched associations, and AI model predictions. The system is designed to be fully configurable and generalized—users supply a guidebook (in JSON format) that describes associations (e.g., subjects, chapters, keywords), and the application scans destination directories to build an enriched associations tree. The sorter then uses a transformer-based model (DistilBERT) to classify files based on file name and content, combine results with heuristic fuzzy matching, and finally move files into appropriate subdirectories.
 
 Designed around a 4 year old laptop, it leverages CPU and integrated GPU (or you could update the code to support discrete GPUs too)
+
 Original Laptop Specs:
-CPU: Intel 11th Gen i5 mobile-platform
-GPU: Intel iRIS Xe Graphics
+- CPU: Intel 11th Gen i5 mobile-platform
+- GPU: Intel iRIS Xe Graphics
+
+You'll need to generate a syallbus.json if you have to teach the sorter a few prehand associations. Syllabus.json will be used by the app to learn links in all three modes of file sorting, it's more like a guidebook, so it's advisable to use a syallbus.json.
 
 ## Purpose
 
@@ -224,6 +227,6 @@ GPU: Intel iRIS Xe Graphics
 
 ## Wanna know more about me?
 
-Then  visit my bio-page at [(https://sugeeth.craft.me)]
+Then  visit my bio-page at [https://sugeeth.craft.me](https://sugeeth.craft.me)
 
 
