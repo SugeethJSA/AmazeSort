@@ -22,13 +22,18 @@ class CancellationCallback(TrainerCallback):
             control.should_early_stop = True
             control.should_save = True
 
-try:
-    import torch_directml
-    device = torch_directml.device()
-    print("Using torch-directml for GPU acceleration:", device)
-except ImportError:
-    device = torch.device("cpu")
-    print("Using CPU.")
+# Device selection update for CUDA support:
+if torch.cuda.is_available():
+    device = torch.device("cuda")
+    print("Using CUDA for GPU acceleration.")
+else:
+    try:
+        import torch_directml
+        device = torch_directml.device()
+        print("Using torch-directml for GPU acceleration:", device)
+    except ImportError:
+        device = torch.device("cpu")
+        print("Using CPU.")
 
 def build_training_dataset(guidebook, dictionary):
     texts = []
