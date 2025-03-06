@@ -32,16 +32,24 @@ def show_splash():
         print("ERROR: Invalid splash image. Skipping splash screen.")
         return None
 
-    # Scale splash to 40% of screen size
+    # Scale splash to 40% of screen size, keeping aspect ratio.
     screen = QApplication.primaryScreen().availableGeometry()
-    width, height = int(screen.width() * 0.4), int(screen.height() * 0.4)
-    pixmap = pixmap.scaled(width, height, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-
-    splash = QSplashScreen(pixmap, Qt.WindowStaysOnTopHint)
-    splash.setGeometry(QRect((screen.width() - width) // 2, (screen.height() - height) // 2, width, height))
+    target_width, target_height = int(screen.width() * 0.4), int(screen.height() * 0.4)
+    scaled_pixmap = pixmap.scaled(target_width, target_height, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+    
+    # Create splash screen with no window frame.
+    splash = QSplashScreen(scaled_pixmap, Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
+    
+    # Center the splash screen based on the actual pixmap size.
+    pixmap_size = scaled_pixmap.size()
+    x = (screen.width() - pixmap_size.width()) // 2
+    y = (screen.height() - pixmap_size.height()) // 2
+    splash.setGeometry(x, y, pixmap_size.width(), pixmap_size.height())
+    
     splash.show()
     QApplication.processEvents()
     return splash
+
 
 def main():
     """Main function to initialize the application and display the main window."""
@@ -97,10 +105,10 @@ def main():
     window = MainWindow(config)
     
     # Close the splash screen and show the main window
-    splash.finish(window)
     window.showNormal()  # Force normal window state instead of minimized
     window.raise_()      # Bring the window to the front
     window.activateWindow()  # Activate the window to get focus
+    splash.finish(window)  # Close the splash screen
     
     # Execute the application
     sys.exit(app.exec())

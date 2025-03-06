@@ -1,8 +1,0 @@
-Traceback (most recent call last):
-  File "C:\Users\sugee\Documents\GitHub\SugeethJSA\AmazeSort\main_ui.py", line 563, in start_training
-self.cancel_btn.setEnabled(True)^^^^^^^^^^^^^^^AttributeError: 'MainWindow' object has no attribute 'cancel_btn'. Did you mean: 'cancel_action'?Associations file not found. Using empty associations.Traceback (most recent call last):
-  File "C:\Users\sugee\Documents\GitHub\SugeethJSA\AmazeSort\main_ui.py", line 563, in start_training
-self.cancel_btn.setEnabled(True)^^^^^^^^^^^^^^^AttributeError: 'MainWindow' object has no attribute 'cancel_btn'. Did you mean: 'cancel_action'?Map:   0%|                            | 0/1433 [00:00<?, ? examples/s]Map: 100%|##############| 1433/1433 [00:00<00:00, 10248.92 examples/s]Map: 100%|###############| 1433/1433 [00:00<00:00, 9768.37 examples/s]c:\Users\sugee\AppData\Local\Programs\Python\Python311\Lib\site-packages\transformers\training_args.py:1594: FutureWarning: `evaluation_strategy` is deprecated and will be removed in version 4.46 of 🤗 Transformers. Use `eval_strategy` instead
-  warnings.warn(
-Map:   0%|                            | 0/1433 [00:00<?, ? examples/s]Map:  70%|##########4    | 1000/1433 [00:00<00:00, 8203.04 examples/s]Map: 100%|###############| 1433/1433 [00:00<00:00, 9273.79 examples/s]c:\Users\sugee\AppData\Local\Programs\Python\Python311\Lib\site-packages\transformers\training_args.py:1594: FutureWarning: `evaluation_strategy` is deprecated and will be removed in version 4.46 of 🤗 Transformers. Use `eval_strategy` instead
-  warnings.warn(
