@@ -1,7 +1,9 @@
-import os, json, re, ctypes, sys, torch
+import os, json, re, ctypes, sys, torch, utils
 from transformers import pipeline
 import transformers
+import logging
 transformers.logging.set_verbosity_error()
+from utils import prevent_sleep, allow_sleep
 
 PARAPHRASER = None
 def get_paraphraser():
@@ -47,13 +49,13 @@ def scan_directory_structure(root_dir, progress_callback=None):
                 if progress_callback:
                     progress_callback(int((processed_items / total_items) * 50))
         except Exception as e:
-            print(f"Error scanning directory {dir_path}: {e}")
+            logging.error(f"Error scanning directory {dir_path}: {e}")
         return dir_structure
     return scan_directory(root_dir)
 
 def load_guidebook(guidebook_file):
     if not os.path.exists(guidebook_file):
-        print(f"Warning: Guidebook file '{guidebook_file}' not found. Proceeding without it.")
+        logging.warning(f"Guidebook file '{guidebook_file}' not found. Proceeding without it.")
         return {}
     with open(guidebook_file, "r", encoding="utf-8") as f:
         return json.load(f)
@@ -61,14 +63,14 @@ def load_guidebook(guidebook_file):
 def generate_synonyms(folder_name, base_keywords=None, max_synonyms=5):
     try:
         paraphraser = get_paraphraser()
-        prompt = f"paraphrase: {folder_name} in multiple ways and generate semantic synonyms. Do not output anything else."
+        prompt = f"paraphrase: {folder_name} in multiple ways and generate semantic synonyms."
         if base_keywords:
             prompt += " Context: " + ", ".join(base_keywords)
         results = paraphraser(prompt, num_beams=max_synonyms, num_return_sequences=max_synonyms, max_length=50)
         synonyms = [res['generated_text'].strip() for res in results if res.get("generated_text")]
         return list(dict.fromkeys(synonyms))[:max_synonyms]
     except Exception as e:
-        print(f"Error generating synonyms for '{folder_name}': {e}")
+        logging.error(f"Error generating synonyms for '{folder_name}': {e}")
         return []
 
 def enrich_structure_with_associations(structure, guidebook, progress_callback=None):
@@ -90,12 +92,12 @@ def enrich_structure_with_associations(structure, guidebook, progress_callback=N
             if not isinstance(generated_syns, list):
                 generated_syns = []
         except Exception as e:
-            print(f"Error generating synonyms for folder '{folder_name}': {e}")
+            logging.error(f"Error generating synonyms for folder '{folder_name}': {e}")
             generated_syns = []
         try:
             associations = list(set(base_keywords + generated_syns))
         except Exception as e:
-            print(f"Error merging keywords for folder '{folder_name}': {e}")
+            logging.error(f"Error merging keywords for folder '{folder_name}': {e}")
             associations = base_keywords
         folder_info["associations"] = associations
 
@@ -108,8 +110,8 @@ def enrich_structure_with_associations(structure, guidebook, progress_callback=N
             progress = min(progress, 100)
             progress_callback(progress)
 
-    for folder_name, folder_info in structure.items():
-        enrich_folder(folder_name, folder_info)
+    for folder_path, folder_info in structure.items():
+        enrich_folder(utils.normalise(folder_path), folder_info)
 
     return structure
 
@@ -144,7 +146,7 @@ def generate_associations(dest_dir, guidebook_file, output_file="associations.js
                 merged_assoc = new_enriched
             associations = merged_assoc
         except Exception as e:
-            print(f"Error loading old associations: {e}. Proceeding with full rebuild.")
+            logging.error(f"Error loading old associations: {e}. Proceeding with full rebuild.")
             associations = new_enriched
     else:
         associations = new_enriched
@@ -152,9 +154,9 @@ def generate_associations(dest_dir, guidebook_file, output_file="associations.js
     try:
         with open(output_file, "w", encoding="utf-8") as f:
             json.dump(associations, f, indent=4, ensure_ascii=False)
-        print(f"Enriched associations generated and saved to {output_file}")
+        logging.info(f"Enriched associations generated and saved to {output_file}")
     except Exception as e:
-        print(f"Error saving associations: {e}")
+        logging.error(f"Error saving associations: {e}")
     return associations
 
 if __name__ == "__main__":
@@ -167,5 +169,5 @@ if __name__ == "__main__":
     
     prevent_sleep()
     associations = generate_associations(dest_dir, guidebook_file, output_file="associations.json", update_mode=update_mode, retain_old=retain_old)
-    print(json.dumps(associations, indent=4, ensure_ascii=False))
+    logging.info(json.dumps(associations, indent=4, ensure_ascii=False))
     allow_sleep()

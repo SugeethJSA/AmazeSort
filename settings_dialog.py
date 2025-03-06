@@ -1,10 +1,15 @@
-from PySide6 import QtWidgets, QtCore
+from PySide6 import QtWidgets, QtCore, QtGui
+import os
+base_dir = os.path.dirname(os.path.abspath(__file__))
+assets_dir = os.path.join(base_dir, "assets")
+icons_dir = os.path.join(assets_dir, "icons")
 
 class SettingsDialog(QtWidgets.QDialog):
     def __init__(self, config, parent=None):
         super().__init__(parent)
         self.config = config
         self.setWindowTitle("Advanced Configuration Settings")
+        self.setWindowIcon(QtGui.QIcon(os.path.join(icons_dir, "settings.png")))
         self.resize(500, 400)
         self.setup_ui()
     
@@ -44,7 +49,7 @@ class SettingsDialog(QtWidgets.QDialog):
         self.update_mode_combo.addItems(["full", "incremental"])
         current_mode = self.config.get("association_update_mode", "full")
         index = self.update_mode_combo.findText(current_mode)
-        if index >= 0:
+        if (index >= 0):
             self.update_mode_combo.setCurrentIndex(index)
         self.retain_old_checkbox = QtWidgets.QCheckBox("Retain old associations")
         self.retain_old_checkbox.setChecked(self.config.get("retain_old_associations", True))
@@ -54,6 +59,15 @@ class SettingsDialog(QtWidgets.QDialog):
         layout.addWidget(advanced_group)
         layout.addWidget(dedup_group)
         layout.addWidget(assoc_group)
+        
+        # New Credits and License Section
+        credits_group = QtWidgets.QGroupBox("Credits and License")
+        credits_layout = QtWidgets.QVBoxLayout(credits_group)
+        credits_text = "AmazeSort: Version 0.02 (Alpha)\nDeveloped by SugeethJSA and community\nAvaliable at SugeethJSA/AmazeSort on GitHub\n\nLicensed under the Dual License System,\ngenerically as GNU GPL 3.0 License available at https://www.gnu.org/licenses/gpl-3.0.en.html.\nFor details on the Dual License, visit https://github.com/SugeethJSA/AmazeSort/blob/main/LICENSE \n\nThis software uses multiple Python libraries, including PySide6, fuzzywuzzy, and more.\nSome icons were sourced from Freepik, while others were created by the developers.\nThis software is provided as-is, with no warranty or guarantee of any kind.\n\n© 2025 SugeethJSA and contributors"
+        credits_label = QtWidgets.QLabel(credits_text)
+        credits_label.setAlignment(QtCore.Qt.AlignLeft)
+        credits_layout.addWidget(credits_label)
+        layout.addWidget(credits_group)
         
         # Save/Cancel Buttons
         btn_layout = QtWidgets.QHBoxLayout()
@@ -86,3 +100,10 @@ class SettingsDialog(QtWidgets.QDialog):
         self.config.set("association_update_mode", self.update_mode_combo.currentText())
         self.config.set("retain_old_associations", self.retain_old_checkbox.isChecked())
         super().accept()
+
+if __name__ == "__main__":
+    app = QtWidgets.QApplication([])
+    config = {"score_threshold": 40, "method_strengths": {"rule_based": 0.3, "hybrid": 0.5, "ai_based": 0.2}, "duplicate_handling": {"skip_duplicates": True, "rename_duplicates": False}, "association_update_mode": "full", "retain_old_associations": True}
+    dialog = SettingsDialog(config)
+    dialog.exec()
+    print(config)

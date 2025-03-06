@@ -1,16 +1,13 @@
 import sys, os
 from PySide6 import QtCore
 from PySide6.QtCore import Qt, QRect, QCoreApplication
-from PySide6.QtWidgets import QSplashScreen, QApplication
-from PySide6.QtGui import QPixmap, QPainter, QPainterPath, QGuiApplication
+from PySide6.QtWidgets import QSplashScreen, QApplication, QGraphicsDropShadowEffect
+from PySide6.QtGui import QPixmap, QPainter, QPainterPath, QGuiApplication, QIcon, QColor, QFont
 import PySide6.QtWidgets as QtWidgets
 
 # Base directory (where app.py is located)
 base_dir = os.path.dirname(os.path.abspath(__file__))
-
-from PySide6.QtWidgets import QSplashScreen, QGraphicsDropShadowEffect
-from PySide6.QtGui import QPainter, QColor, QFont
-from PySide6.QtCore import Qt
+assets_dir = os.path.join(base_dir, "assets")
 
 class CustomSplashScreen(QSplashScreen):
     def __init__(self, pixmap):
@@ -34,14 +31,19 @@ class CustomSplashScreen(QSplashScreen):
         self.repaint()  # trigger paintEvent
 
     def paintEvent(self, event):
-        super().paintEvent(event)  # draw pixmap, etc.
+        # Clear background with transparency to avoid black box.
+        painter = QPainter(self)
+        painter.setCompositionMode(QPainter.CompositionMode_Source)
+        painter.fillRect(self.rect(), Qt.transparent)
+        painter.setCompositionMode(QPainter.CompositionMode_SourceOver)
+        # Draw the pixmap and any additional elements.
+        super().paintEvent(event)
         if self.message:
-            painter = QPainter(self)
             painter.setPen(self.message_color)
             painter.setFont(QFont("Arial", 12))
             rect = self.rect()
             painter.drawText(rect, self.message_align, self.message)
-            painter.end()
+        painter.end()
 
 class SplashScreen(QtWidgets.QSplashScreen):
     def round_pixmap(pixmap, radius=20):
@@ -59,7 +61,7 @@ class SplashScreen(QtWidgets.QSplashScreen):
         return rounded
     def show_splash_fallback():
         # Create a QPixmap for the splash screen
-        pixmap = QPixmap(os.path.join(base_dir, "splash.png"))  # Use your PNG file here
+        pixmap = QPixmap(os.path.join(assets_dir, "Splash.png"))  # Use your PNG file here
 
         # Use primaryScreen to get screen geometry.
         screen = QApplication.primaryScreen().availableGeometry()
@@ -81,49 +83,58 @@ class SplashScreen(QtWidgets.QSplashScreen):
         QApplication.processEvents()
         return splash
 
-def show_splash():
-    # Load high-resolution splash image.
-    pixmap = QPixmap(os.path.join(base_dir, "splash.png"))
-    # Get primary screen geometry.
+class ShadowedSplashWidget(QtWidgets.QWidget):
+    """Custom widget to display a splash screen with drop shadow without a black box."""
+    def __init__(self, pixmap: QPixmap, parent=None):
+        super().__init__(parent)
+        self.setAttribute(Qt.WA_TranslucentBackground)
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
+        self.resize(pixmap.size())
+        self.label = QtWidgets.QLabel(self)
+        self.label.setPixmap(pixmap)
+        self.label.resize(pixmap.size())
+        # Apply drop shadow effect to the label.
+        shadow = QGraphicsDropShadowEffect(self)
+        shadow.setBlurRadius(30)
+        shadow.setOffset(0, 0)
+        shadow.setColor(QColor(0, 0, 0, 160))
+        self.label.setGraphicsEffect(shadow)
+        
+    def paintEvent(self, event):
+        # ...existing code if needed, otherwise simply call the parent's paintEvent.
+        super().paintEvent(event)
+
+def show_splash() -> QtWidgets.QWidget:
+    """Create and display the custom shadowed splash screen."""
+    pixmap = QPixmap(os.path.join(assets_dir, "splash.png"))
     screen = QApplication.primaryScreen().availableGeometry()
     width = int(screen.width() * 0.4)
     height = int(screen.height() * 0.4)
-    # Scale the pixmap to the target size.
     pixmap = pixmap.scaled(width, height, Qt.KeepAspectRatio, Qt.SmoothTransformation)
     
     # Apply rounded corners.
     pixmap = SplashScreen.round_pixmap(pixmap, radius=20)
     
-    # Create our custom splash screen with shadow and text support.
+    # Use the custom CustomSplashScreen.
     splash = CustomSplashScreen(pixmap)
-    splash.setAttribute(Qt.WA_TranslucentBackground)
-    # Use frameless window flags for layered windows.
-    splash.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
-    
-    # Center the splash screen.
     splash.setGeometry(QRect((screen.width() - width) // 2,
                              (screen.height() - height) // 2,
                              width, height))
-    
-    # Remove the setMask() call. This avoids mismatches between mask and geometry.
-    # splash.setMask(pixmap.mask())
-    
-    # splash.showMessage("Loading, please wait...", alignment=Qt.AlignBottom | Qt.AlignLeft, color=QColor("white"))
     splash.show()
     QApplication.processEvents()
-    
-    # Optionally show a message.
-    # 
-    
     return splash
 
-def main():
+def main() -> None:
+    """Main function to initialize the application and display the main window."""
     # Enable high DPI pixmap support (do this before creating QApplication)
     # High DPI support is enabled by default, however, the policy below ensures that the application knows that it's enabled.
     QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
 
     # Create the application
     app = QApplication(sys.argv)
+    # Set application icon.
+    icon_path = os.path.join(assets_dir, "app_icon.ico")
+    app.setWindowIcon(QIcon(icon_path))
     
     style_sheet = """    QProgressBar {
         border: 1px solid #e0e0e0;
@@ -168,7 +179,9 @@ def main():
     
     # Close the splash screen and show the main window
     splash.finish(window)
-    window.show()
+    window.showNormal()  # Force normal window state instead of minimized
+    window.raise_()      # Bring the window to the front
+    window.activateWindow()  # Activate the window to get focus
     
     # Execute the application
     sys.exit(app.exec())

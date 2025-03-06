@@ -5,6 +5,7 @@ from collections import defaultdict
 from fuzzywuzzy import fuzz
 import PyPDF2
 import ctypes, sys
+import logging
 
 def prevent_sleep():
     if sys.platform == "win32":
@@ -16,7 +17,7 @@ def allow_sleep():
         ctypes.windll.kernel32.SetThreadExecutionState(0x80000000)
 
 def normalize(text):
-    text = re.sub(r'[-_.\s]+', ' ', text.lower()).strip()
+    text = re.sub(r'[/-_.\s]+', ' ', text.lower()).strip()
     text = re.sub(r'\b(ls|chapter|ch)\s*\d*\b', '', text)
     return text.split()
 
@@ -46,7 +47,7 @@ def extract_pdf_text(filepath):
                 text = " ".join(page.extract_text() or "" for page in reader.pages[:2])
                 return text.lower()
         except Exception as e:
-            print(f"Warning: Could not extract text from {filepath}: {e}")
+            logging.warning(f"Warning: Could not extract text from {filepath}: {e}")
             return ""
     return ""
 
@@ -67,7 +68,7 @@ def compute_file_hash(filepath, algorithm="md5"):
                 hash_func.update(chunk)
         return hash_func.hexdigest()
     except Exception as e:
-        print(f"Error computing hash for {filepath}: {e}")
+        logging.error(f"Error computing hash for {filepath}: {e}")
         return None
 
 def is_duplicate(filepath, hash_cache):
@@ -81,9 +82,9 @@ def is_duplicate(filepath, hash_cache):
         return False, None
 
 if __name__ == "__main__":
-    print("Normalization test:", normalize("CLASS_XII_Chemistry_Ch_14-Polymerization.pdf"))
+    logging.info("Normalization test: " + str(normalize("CLASS_XII_Chemistry_Ch_14-Polymerization.pdf")))
     file_terms = normalize("Maths_Stand.pdf")
     keyword_terms = ["math", "algebra", "geometry"]
-    print("Improved score:", improved_score(file_terms, keyword_terms))
+    logging.info("Improved score: " + str(improved_score(file_terms, keyword_terms)))
     test_file = "example.pdf"  # Change to an existing file for testing
-    print("File hash:", compute_file_hash(test_file))
+    logging.info("File hash: " + str(compute_file_hash(test_file)))

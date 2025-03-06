@@ -4,15 +4,8 @@ from sklearn.preprocessing import LabelEncoder
 from transformers import DistilBertForSequenceClassification, DistilBertTokenizerFast, Trainer, TrainingArguments, TrainerCallback
 from datasets import Dataset
 import ctypes, sys
-
-def prevent_sleep():
-    if sys.platform == "win32":
-        # ES_CONTINUOUS | ES_SYSTEM_REQUIRED flags to prevent sleep
-        ctypes.windll.kernel32.SetThreadExecutionState(0x80000000 | 0x00000001)
-        
-def allow_sleep():
-    if sys.platform == "win32":
-        ctypes.windll.kernel32.SetThreadExecutionState(0x80000000)
+from utils import prevent_sleep, allow_sleep
+import logging
 
 class CancellationCallback(TrainerCallback):
     def __init__(self, cancel_flag_func):
@@ -25,15 +18,15 @@ class CancellationCallback(TrainerCallback):
 # Device selection update for CUDA support:
 if torch.cuda.is_available():
     device = torch.device("cuda")
-    print("Using CUDA for GPU acceleration.")
+    logging.info("Using CUDA for GPU acceleration.")
 else:
     try:
         import torch_directml
         device = torch_directml.device()
-        print("Using torch-directml for GPU acceleration:", device)
+        logging.info("Using torch-directml for GPU acceleration: " + str(device))
     except ImportError:
         device = torch.device("cpu")
-        print("Using CPU.")
+        logging.info("Using CPU.")
 
 def build_training_dataset(guidebook, dictionary):
     texts = []
@@ -111,8 +104,8 @@ class TransformerAIModel:
         self.model.save_pretrained(output_dir)
         self.tokenizer.save_pretrained(output_dir)
         self.is_trained = True
-        print(f"Transformer AI model trained with {len(texts)} examples.")
-        print("Training completed successfully.")
+        logging.info(f"Transformer AI model trained with {len(texts)} examples.")
+        logging.info("Training completed successfully.")
         allow_sleep()
 
     def stop(self):
@@ -141,7 +134,7 @@ class TransformerAIModel:
         data = {"model_dir": temp_dir, "label_encoder": self.label_encoder}
         with open(filename, "wb") as f:
             pickle.dump(data, f)
-        print(f"Transformer model saved to {filename}")
+        logging.info(f"Transformer model saved to {filename}")
 
     def load(self, filename):
         if os.path.exists(filename):
@@ -151,7 +144,7 @@ class TransformerAIModel:
             self.model = DistilBertForSequenceClassification.from_pretrained(data["model_dir"])
             self.model.to(self.device)
             self.is_trained = True
-            print(f"Transformer model loaded from {filename}")
+            logging.info(f"Transformer model loaded from {filename}")
             return True
         return False
 
@@ -166,14 +159,14 @@ if __name__ == "__main__":
         dictionary_data = json.load(f)
     
     texts, labels = build_training_dataset(guidebook, dictionary_data)
-    print(f"Training data built with {len(texts)} examples.")
+    logging.info(f"Training data built with {len(texts)} examples.")
     
     model = TransformerAIModel()
     model.train(texts, labels, epochs=5)  # Increase epochs as needed
     pred, conf = model.predict("Organic Chemistry reaction mechanisms")
-    print("Prediction:", pred, "Confidence:", conf)
+    logging.info("Prediction: " + str(pred) + " Confidence: " + str(conf))
     model.save("transformer_ai_model.pkl")
     new_model = TransformerAIModel()
     new_model.load("transformer_ai_model.pkl")
     pred2, conf2 = new_model.predict("Quantum mechanics introduction")
-    print("Reloaded prediction:", pred2, "Confidence:", conf2)
+    logging.info("Reloaded prediction: " + str(pred2) + " Confidence: " + str(conf2))

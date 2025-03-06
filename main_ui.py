@@ -215,12 +215,15 @@ class MainWindow(QtWidgets.QMainWindow):
         super().__init__()
         self.config = config
         self.sorter = FileSorter(self.config)
-        self.setWindowTitle("Enterprise File Sorter")
+        self.setWindowTitle("AmazeSort : Python-based file sorter.")
         # Increase the default width to ensure the ribbon is fully visible.
         width = self.config.get("ui", {}).get("window_width", 1200)
         # Set a minimum width to prevent the ribbon from being hidden.
         self.setMinimumWidth(width)
         self.resize(width, self.sizeHint().height())
+        
+        icon_path = os.path.join(Assets_Dir, "app_icon.ico")
+        self.setWindowIcon(QtGui.QIcon(icon_path))
         
         self.setup_ribbon()
         self.setup_central_area()
