@@ -6,6 +6,11 @@ Current Head Maintainer: SugeethJSA
 
 Currently, this app is in the alpha testing stage. However, there are multiple bugs and unimplemented features that may cause the app to crash or sort incorrectly. The aim of the roadmap currently is to ensure that the app's UI is properly fixed. Over time, there will be logic. At this stage, the app is self-contained./
 
+To ensure the app works properly, run the following before starting to use the app:
+
+`pip install -r requirements.txt` 
+`python -m spacy download en_core_web_sm`
+
 AI Notice: AI has been used in the development of the majority part of this app, as this my first time developing an actual python app. I have usually developed complex Apple Shortcuts, but I ended up creating this app only to help me sort the myriads of files on my laptop.
 
 ## Contributions and Licensing
