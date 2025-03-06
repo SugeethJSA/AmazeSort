@@ -1,3 +1,12 @@
+# App Runtime Specific Stuff (Debug_API)
+.codebudy/
+logs/
+*.log
+*.json
+*.svg
+transformer_model/
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
