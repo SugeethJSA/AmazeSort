@@ -43,5 +43,5 @@ jobs:
     - name: Test using normal run
       run: |
         export QT_QPA_PLATFORM_PLUGIN_PATH=/usr/lib/qt6/plugins/platforms/
-        xvfb-run QT_DEBUG_PLUGINS=1 python app.py
+        xvfb-run python app.py
 
