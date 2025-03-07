@@ -50,16 +50,14 @@ else:
 # -------------------------------
 # CONFIGURATION
 # -------------------------------
-
 APP_DIR = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.getcwd()
-SITE_PACKAGES = os.path.join(APP_DIR, "site-packages")
+SITE_PACKAGES = os.path.join(APP_DIR, "_internal")
 os.makedirs(SITE_PACKAGES, exist_ok=True)  # Ensure directory exists
 sys.path.insert(0, SITE_PACKAGES)  # Add site-packages to Python path
 
 # -------------------------------
 # INSTALLATION THREAD
 # -------------------------------
-
 class GPUInstallerThread(QThread):
     progress = Signal(int)   # Progress bar signal
     log = Signal(str)        # Log update signal
@@ -71,7 +69,7 @@ class GPUInstallerThread(QThread):
         if self.stop_flag:
             return
         self.log.emit(f"📦 Installing {package} ({step}/{total_steps})...")
-        self.progress.emit(int((step / total_steps) * 100))
+        self.progress.emit(int((step / (total_steps + 1)) * 100))
 
         try:
             cmd = [sys.executable, "-m", "pip", "install", package, "--target", SITE_PACKAGES, "--no-cache-dir"]
@@ -79,11 +77,22 @@ class GPUInstallerThread(QThread):
                 cmd.append("--force-reinstall")
             if index_url:
                 cmd.extend(["--index-url", index_url])
-            subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        except subprocess.CalledProcessError as e:
-            self.log.emit(f"❌ Failed to install {package}: {str(e)}")
+            # Using subprocess.Popen to stream live output
+            process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+            for line in iter(process.stdout.readline, ""):
+                if self.stop_flag:
+                    break
+                if line:
+                    self.log.emit(line.strip())
+            process.stdout.close()
+            return_code = process.wait()
+            if return_code != 0:
+                self.log.emit(f"❌ Failed to install {package}: exited with code {return_code}")
+                return
+        except Exception as e:
+            self.log.emit(f"❌ Exception during installation of {package}: {str(e)}")
             return
-        
+
         if self.stop_flag:  # Double check after install attempt
             return
 
@@ -142,7 +151,6 @@ class GPUInstallerThread(QThread):
 # -------------------------------
 # GUI INSTALLER
 # -------------------------------
-
 class GPUInstallerApp(QWidget):
     def __init__(self):
         super().__init__()
@@ -212,8 +220,8 @@ class GPUInstallerApp(QWidget):
     def update_log(self, message):
         """Updates the log output, sets the label, and auto-scrolls to the latest log"""
         self.log_output.append(message)
-        self.log_output.moveCursor(QTextCursor.MoveOperation.End)  # Auto-scroll to bottom
-        self.label.setText(message)  # Keep label in sync with latest status
+        self.log_output.moveCursor(QTextCursor.MoveOperation.End)  # Auto-scroll to bottom  
+        # Keep label in sync with latest status self.label.setText(message)
 
     def on_installation_complete(self, success):
         """Called when installation is done"""

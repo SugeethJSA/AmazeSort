@@ -1,8 +1,4 @@
-import os
-import shutil
-import time
-import traceback
-import json
+import os, shutil, time, traceback, json
 from utils import normalize, improved_score, extract_pdf_text, cluster_files, is_duplicate
 from ai_model import TransformerAIModel
 from config import Config

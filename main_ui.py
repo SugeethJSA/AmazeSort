@@ -1,7 +1,7 @@
-import sys, os, json
+import sys, os, json, subprocess
 from PySide6 import QtWidgets, QtCore, QtGui
 from PySide6.QtWidgets import QVBoxLayout, QGroupBox, QPushButton, QLabel, QProgressBar, QToolBar, QWidget, QHBoxLayout, QListWidget, QWidgetAction
-from PySide6.QtGui import QAction
+from PySide6.QtGui import QAction, QTextCursor
 from config import Config
 from file_sorter import FileSorter
 from ai_model import TransformerAIModel
@@ -663,6 +663,7 @@ class MainWindow(QtWidgets.QMainWindow):
         cleaned = text.strip()
         if cleaned:
             self.log_text.append(cleaned)
+            self.log_text.moveCursor(QTextCursor.MoveOperation.End)  # Auto-scroll to bottom
 
     def open_wiki(self):
         import webbrowser

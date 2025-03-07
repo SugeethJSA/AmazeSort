@@ -2,7 +2,6 @@ import sys, os, subprocess
 from PySide6.QtCore import Qt, QRect, QCoreApplication
 from PySide6.QtWidgets import QSplashScreen, QApplication, QGraphicsDropShadowEffect
 from PySide6.QtGui import QPixmap, QPainter, QPainterPath, QGuiApplication, QIcon, QColor, QFont
-import PySide6.QtWidgets as QtWidgets
 
 # Determine the base directory
 if getattr(sys, 'frozen', False):  
@@ -11,10 +10,15 @@ else:
     base_dir = os.path.dirname(os.path.abspath(__file__))  # Running as a .py script
 
 assets_dir = os.path.join(base_dir, "assets")
-setup_path = os.path.join(base_dir, "gpu_setup.exe")
+setup_path = os.path.join(base_dir, "amazesort_gpu_setup.exe")
+APP_DIR = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.getcwd()
+SITE_PACKAGES = os.path.join(APP_DIR, "_internal")
+os.makedirs(SITE_PACKAGES, exist_ok=True)  # Ensure directory exists
+sys.path.insert(0, SITE_PACKAGES)  # Add site-packages to Python path
+
 
 try:
-    import torch
+    import torchaudio
 except ImportError:
     print("🚀 Running GPU setup...")
     subprocess.run([setup_path])  # Run the setup script
