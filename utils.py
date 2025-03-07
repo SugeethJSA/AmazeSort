@@ -1,11 +1,7 @@
-import os
-import re
-import hashlib
+import os, re, hashlib, PyPDF2, ctypes, sys, logging
 from collections import defaultdict
 from fuzzywuzzy import fuzz
-import PyPDF2
-import ctypes, sys
-import logging
+
 
 def prevent_sleep():
     if sys.platform == "win32":

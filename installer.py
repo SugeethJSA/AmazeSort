@@ -1,9 +1,51 @@
-import os
-import sys
-import subprocess
+import os, sys, subprocess
 from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QProgressBar, QPushButton, QTextEdit
 from PySide6.QtCore import Qt, QThread, Signal
 from PySide6.QtGui import QTextCursor
+
+def detect_gpu_vendor():
+    vendors = []
+
+    try:
+        # Check for NVIDIA GPU
+        nvidia_check = subprocess.run(["nvidia-smi"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
+        if nvidia_check.returncode == 0:
+            vendors.append("NVIDIA")
+    except FileNotFoundError:
+        pass
+
+    try:
+        # Check for AMD GPU
+        amd_check = subprocess.run(["rocminfo"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
+        if amd_check.returncode == 0:
+            vendors.append("AMD")
+    except FileNotFoundError:
+        pass
+
+    try:
+        # Check for Intel GPU
+        intel_check = subprocess.run(["sycl-ls"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
+        if intel_check.returncode == 0:
+            vendors.append("Intel")
+    except FileNotFoundError:
+        pass
+
+    return vendors if vendors else ["Unknown"]
+
+gpu_vendors = detect_gpu_vendor()
+
+if "NVIDIA" in gpu_vendors:
+    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+if "AMD" in gpu_vendors:
+    os.environ["HIP_VISIBLE_DEVICES"] = "0"
+if "Intel" in gpu_vendors:
+    os.environ["ONEAPI_DEVICE_SELECTOR"] = "gpu:0"
+
+if "Unknown" in gpu_vendors:
+    print("No supported GPU detected.")
+else:
+    print(f"Detected GPU vendor(s): {', '.join(gpu_vendors)}")
+
 
 # -------------------------------
 # CONFIGURATION

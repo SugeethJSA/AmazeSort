@@ -15,3 +15,5 @@ tf-keras
 tensorflow
 tqdm
 accelerate
+subprocess
+pyinstaller

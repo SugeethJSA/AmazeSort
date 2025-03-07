@@ -1,5 +1,4 @@
-import json
-import os, sys
+import json, os, sys
 
 if getattr(sys, 'frozen', False):  
     base_dir = os.path.dirname(sys.executable)  # Running as an .exe
