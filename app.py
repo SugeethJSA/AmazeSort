@@ -12,7 +12,7 @@ else:
 assets_dir = os.path.join(base_dir, "assets")
 setup_path = os.path.join(base_dir, "amazesort_gpu_setup.exe")
 APP_DIR = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.getcwd()
-SITE_PACKAGES = os.path.join(APP_DIR, "_internal")
+SITE_PACKAGES = os.path.join(APP_DIR, "site-packages")
 os.makedirs(SITE_PACKAGES, exist_ok=True)  # Ensure directory exists
 sys.path.insert(0, SITE_PACKAGES)  # Add site-packages to Python path
 
@@ -22,6 +22,10 @@ try:
 except ImportError:
     print("🚀 Running GPU setup...")
     subprocess.run([setup_path])  # Run the setup script
+
+for path in sys.path[:]:
+    if "torch" in path.lower() and "_internal/" in path:  # Adjust condition if needed
+        sys.path.remove(path)
 
 # Base directory (where app.py is located)
 

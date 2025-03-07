@@ -51,7 +51,7 @@ else:
 # CONFIGURATION
 # -------------------------------
 APP_DIR = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.getcwd()
-SITE_PACKAGES = os.path.join(APP_DIR, "_internal")
+SITE_PACKAGES = os.path.join(APP_DIR, "site-packages")  # Custom site-packages directory
 os.makedirs(SITE_PACKAGES, exist_ok=True)  # Ensure directory exists
 sys.path.insert(0, SITE_PACKAGES)  # Add site-packages to Python path
 
