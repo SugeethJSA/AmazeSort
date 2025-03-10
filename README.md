@@ -10,6 +10,11 @@ A Python-based app to sort files using rule-based, hybrid-approach and/or fully 
 
 Currently, this app is in the alpha testing stage. However, there are multiple bugs and unimplemented features that may cause the app to crash or sort incorrectly. The aim of the roadmap currently is to ensure that the app's UI is properly fixed. Over time, there will be logic. At this stage, the app is self-contained./
 
+```
+The Python Application building modules via GitHub Actions are failing to incorrectly configured workflows. This will take some time to fix. 
+```
+
+
 To ensure the app works properly, run the following before starting to use the app:
 
 ```
