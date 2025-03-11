@@ -1,4 +1,4 @@
-import sys, os, subprocess
+import sys, os, subprocess, importlib.util
 from PySide6.QtCore import Qt, QRect, QCoreApplication
 from PySide6.QtWidgets import QSplashScreen, QApplication, QGraphicsDropShadowEffect
 from PySide6.QtGui import QPixmap, QPainter, QPainterPath, QGuiApplication, QIcon, QColor, QFont
@@ -16,12 +16,19 @@ SITE_PACKAGES = os.path.join(APP_DIR, "site-packages")
 os.makedirs(SITE_PACKAGES, exist_ok=True)  # Ensure directory exists
 sys.path.insert(0, SITE_PACKAGES)  # Add site-packages to Python path
 
+# Checks for GPU and installs necessary packages
 
-try:
-    import torchaudio
-except ImportError:
+def is_package_installed(package_name):
+    return importlib.util.find_spec(package_name) is not None
+
+if not is_package_installed("torch"):
     print("🚀 Running GPU setup...")
-    subprocess.run([setup_path])  # Run the setup script
+    import installer  # Assuming you have an 'installer' module to handle installation
+    installer.main()
+    # subprocess.run([setup_path])  # Uncomment this if you need to run a setup script
+else:
+    print("✅ Torch is already installed!")
+
 
 for path in sys.path[:]:
     if "torch" in path.lower() and "_internal/" in path:  # Adjust condition if needed

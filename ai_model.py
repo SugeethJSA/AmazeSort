@@ -1,4 +1,4 @@
-import os, pickle, json, sys, logging
+import os, pickle, json, sys, logging, subprocess
 
 def detect_gpu_vendor():
     vendors = []

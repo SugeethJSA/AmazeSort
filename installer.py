@@ -213,8 +213,8 @@ class GPUInstallerApp(QWidget):
 
     def launch_amazesort(self):
         """Launches AmazeSort after installation"""
-        exe_path = os.path.join(APP_DIR, "AmazeSort.exe")  # Adjust path if needed
-        subprocess.Popen(exe_path, shell=True)
+        # exe_path = os.path.join(APP_DIR, "AmazeSort.exe")  # Adjust path if needed
+        # subprocess.Popen(exe_path, shell=True)
         self.close()
 
     def update_log(self, message):
@@ -230,8 +230,13 @@ class GPUInstallerApp(QWidget):
             self.launch_button.setEnabled(True)  # Enable launch button
         self.cancel_button.setEnabled(False)
 
-if __name__ == "__main__":
+def main():
+    """Main function to initialize the application and display the main window."""
     app = QApplication(sys.argv)
     window = GPUInstallerApp()
     window.show()
     sys.exit(app.exec())
+
+
+if __name__ == "__main__":
+    main()

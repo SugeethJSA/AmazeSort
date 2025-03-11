@@ -1,4 +1,4 @@
-import os, json, re, sys, utils, logging
+import os, json, re, sys, utils, logging, subprocess
 
 def detect_gpu_vendor():
     vendors = []
