@@ -1,35 +1,16 @@
-import os, sys, subprocess
+import os, sys, subprocess, shutil
 from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QProgressBar, QPushButton, QTextEdit
 from PySide6.QtCore import Qt, QThread, Signal
 from PySide6.QtGui import QTextCursor
 
 def detect_gpu_vendor():
     vendors = []
-
-    try:
-        # Check for NVIDIA GPU
-        nvidia_check = subprocess.run(["nvidia-smi"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
-        if nvidia_check.returncode == 0:
-            vendors.append("NVIDIA")
-    except FileNotFoundError:
-        pass
-
-    try:
-        # Check for AMD GPU
-        amd_check = subprocess.run(["rocminfo"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
-        if amd_check.returncode == 0:
-            vendors.append("AMD")
-    except FileNotFoundError:
-        pass
-
-    try:
-        # Check for Intel GPU
-        intel_check = subprocess.run(["sycl-ls"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
-        if intel_check.returncode == 0:
-            vendors.append("Intel")
-    except FileNotFoundError:
-        pass
-
+    if shutil.which("nvidia-smi"):
+        vendors.append("NVIDIA")
+    if shutil.which("rocminfo"):
+        vendors.append("AMD")
+    if shutil.which("sycl-ls"):
+        vendors.append("Intel")
     return vendors if vendors else ["Unknown"]
 
 gpu_vendors = detect_gpu_vendor()
@@ -58,6 +39,8 @@ sys.path.insert(0, SITE_PACKAGES)  # Add site-packages to Python path
 # -------------------------------
 # INSTALLATION THREAD
 # -------------------------------
+from pip._internal import main as pip_main  # New pip API import
+
 class GPUInstallerThread(QThread):
     progress = Signal(int)   # Progress bar signal
     log = Signal(str)        # Log update signal
@@ -70,31 +53,17 @@ class GPUInstallerThread(QThread):
             return
         self.log.emit(f"📦 Installing {package} ({step}/{total_steps})...")
         self.progress.emit(int((step / (total_steps + 1)) * 100))
-
+        cmd = ["install", package, "--target", SITE_PACKAGES, "--no-cache-dir"]
+        if force_reinstall:
+            cmd.append("--force-reinstall")
+        if index_url:
+            cmd.extend(["--index-url", index_url])
         try:
-            cmd = [sys.executable, "-m", "pip", "install", package, "--target", SITE_PACKAGES, "--no-cache-dir"]
-            if force_reinstall:
-                cmd.append("--force-reinstall")
-            if index_url:
-                cmd.extend(["--index-url", index_url])
-            # Using subprocess.Popen to stream live output
-            process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-            for line in iter(process.stdout.readline, ""):
-                if self.stop_flag:
-                    break
-                if line:
-                    self.log.emit(line.strip())
-            process.stdout.close()
-            return_code = process.wait()
-            if return_code != 0:
-                self.log.emit(f"❌ Failed to install {package}: exited with code {return_code}")
-                return
+            result = pip_main(cmd)
+            if result != 0:
+                self.log.emit(f"❌ Failed to install {package}: exited with code {result}")
         except Exception as e:
             self.log.emit(f"❌ Exception during installation of {package}: {str(e)}")
-            return
-
-        if self.stop_flag:  # Double check after install attempt
-            return
 
     def run(self):
         """Runs the installation process in a background thread"""

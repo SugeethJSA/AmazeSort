@@ -1,32 +1,13 @@
-import os, json, re, sys, utils, logging, subprocess
+import os, json, re, sys, utils, logging, subprocess, ctypes, shutil
 
 def detect_gpu_vendor():
     vendors = []
-
-    try:
-        # Check for NVIDIA GPU
-        nvidia_check = subprocess.run(["nvidia-smi"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
-        if nvidia_check.returncode == 0:
-            vendors.append("NVIDIA")
-    except FileNotFoundError:
-        pass
-
-    try:
-        # Check for AMD GPU
-        amd_check = subprocess.run(["rocminfo"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
-        if amd_check.returncode == 0:
-            vendors.append("AMD")
-    except FileNotFoundError:
-        pass
-
-    try:
-        # Check for Intel GPU
-        intel_check = subprocess.run(["sycl-ls"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
-        if intel_check.returncode == 0:
-            vendors.append("Intel")
-    except FileNotFoundError:
-        pass
-
+    if shutil.which("nvidia-smi"):
+        vendors.append("NVIDIA")
+    if shutil.which("rocminfo"):
+        vendors.append("AMD")
+    if shutil.which("sycl-ls"):
+        vendors.append("Intel")
     return vendors if vendors else ["Unknown"]
 
 gpu_vendors = detect_gpu_vendor()
@@ -57,7 +38,7 @@ try:
 except ImportError:
     logging.error("Torch not found. Make sure GPU installer ran successfully.")
 
-import transformers, ctypes
+import transformers
 from transformers import pipeline
 transformers.logging.set_verbosity_error()
 from utils import prevent_sleep, allow_sleep
@@ -162,40 +143,39 @@ def enrich_structure_with_associations(structure, guidebook, progress_callback=N
         total_items = 1
     processed_items = 0
 
-    def enrich_folder(folder_name, folder_info):
+
+    def enrich_folder(folder_info):
         nonlocal processed_items
-        base_keywords = guidebook.get(folder_name, [])
+
+        # Use the folder's name as the key for guidebook lookup.
+        base_keywords = guidebook.get(folder_info.get("name"), [])
         if not isinstance(base_keywords, list):
             if isinstance(base_keywords, dict):
                 base_keywords = base_keywords.get("keywords", [])
             else:
                 base_keywords = []
         try:
-            generated_syns = generate_synonyms(folder_name, base_keywords)
-            if not isinstance(generated_syns, list):
-                generated_syns = []
+            generated_syns = generate_synonyms(folder_info.get("name"), base_keywords)
         except Exception as e:
-            logging.error(f"Error generating synonyms for folder '{folder_name}': {e}")
+            logging.error(f"Error generating synonyms for '{folder_info.get('name')}': {e}")
             generated_syns = []
-        try:
-            associations = list(set(base_keywords + generated_syns))
-        except Exception as e:
-            logging.error(f"Error merging keywords for folder '{folder_name}': {e}")
-            associations = base_keywords
-        folder_info["associations"] = associations
-
-        if "children" in folder_info and isinstance(folder_info["children"], dict):
-            folder_info["children"] = enrich_structure_with_associations(folder_info["children"], guidebook, progress_callback)
-        
-        processed_items += 1
+        folder_info["associations"] = list(set(base_keywords + generated_syns))
+        # Process children recursively
+        children = folder_info.get("children", {})
+        if isinstance(children, dict):
+            for child_info in children.values():
+                enrich_folder(child_info)
         if progress_callback:
             progress = int((processed_items / total_items) * 100)
             progress = min(progress, 100)
-            progress_callback(progress)
+        progress_callback(progress)
 
     for folder_path, folder_info in structure.items():
-        enrich_folder(utils.normalise(folder_path), folder_info)
-
+        enrich_folder(utils.normalise(folder_path), folder_info) 
+        progress_callback(progress)
+  # or any incremental value per folder processed
+    for folder in structure.values():
+        enrich_folder(folder)
     return structure
 
 def deep_merge_associations(old_assoc, new_assoc):

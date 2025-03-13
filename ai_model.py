@@ -61,7 +61,7 @@ except ImportError:
 
 import numpy as np
 from sklearn.preprocessing import LabelEncoder
-from transformers import DistilBertForSequenceClassification, DistilBertTokenizerFast, Trainer, TrainingArguments, TrainerCallback
+from transformers import AutoTokenizer, AutoModelForSequenceClassification, Trainer, TrainingArguments, TrainerCallback
 from datasets import Dataset
 import ctypes
 from utils import prevent_sleep, allow_sleep
@@ -103,29 +103,27 @@ def get_device():
 
 device = get_device()
 
-def build_training_dataset(guidebook, dictionary):
+def build_training_dataset(guidebook, dictionary=None):
+    def recursive_collect(data, current_path, texts, labels):
+        if isinstance(data, dict):
+            for key, value in data.items():
+                recursive_collect(value, current_path + [key], texts, labels)
+        elif isinstance(data, list):
+            text = " ".join(current_path) + " " + " ".join(data)
+            label = "/".join(current_path)
+            texts.append(text)
+            labels.append(label)
     texts = []
     labels = []
-    # Loop through your guidebook (or dictionary) structure.
-    for subject, content in guidebook.items():
-        if isinstance(content, dict):
-            for unit, chapters in content.items():
-                for chapter, keywords in chapters.items():
-                    text = f"{subject} {chapter} {' '.join(keywords)}"
-                    texts.append(text)
-                    labels.append(f"{subject}/{chapter}")
-        elif isinstance(content, list):
-            text = f"{subject} {' '.join(content)}"
-            texts.append(text)
-            labels.append(f"{subject}/General")
-    # Optionally, you can also incorporate extra examples from dictionary.json
-    # e.g., for additional training examples.
-    # Merge or extend texts and labels as needed.
+    recursive_collect(guidebook, [], texts, labels)
+    if dictionary:
+        recursive_collect(dictionary, [], texts, labels)
     return texts, labels
 
 class TransformerAIModel:
     def __init__(self):
-        self.tokenizer = DistilBertTokenizerFast.from_pretrained("distilbert-base-uncased")
+        # Use CodeBERT instead of DistilBert
+        self.tokenizer = AutoTokenizer.from_pretrained("microsoft/codebert-base")
         self.model = None
         self.label_encoder = LabelEncoder()
         self.is_trained = False
@@ -139,16 +137,16 @@ class TransformerAIModel:
         # Reset cancellation flag.
         self.cancelled = False
 
-        # Convert string labels to integers.
         self.label_encoder.fit(labels)
         int_labels = self.label_encoder.transform(labels)
         dataset = Dataset.from_dict({"text": texts, "label": int_labels})
         def tokenize_function(examples):
-            return self.tokenizer(examples["text"], truncation=True, padding="max_length", max_length=128)
+            return self.tokenizer(examples["text"], truncation=True, padding="max_length", max_length=256)  # increased max_length
         tokenized_dataset = dataset.map(tokenize_function, batched=True)
         tokenized_dataset = tokenized_dataset.train_test_split(test_size=0.1)
         num_labels = len(self.label_encoder.classes_)
-        self.model = DistilBertForSequenceClassification.from_pretrained("distilbert-base-uncased", num_labels=num_labels)
+        # Instantiate CodeBERT for sequence classification.
+        self.model = AutoModelForSequenceClassification.from_pretrained("microsoft/codebert-base", num_labels=num_labels)
         self.model.to(self.device)
         training_arguments = TrainingArguments(
             output_dir=output_dir,
@@ -189,7 +187,7 @@ class TransformerAIModel:
     def predict(self, text):
         if not self.is_trained or self.model is None:
             raise ValueError("Model is not trained.")
-        inputs = self.tokenizer(text, return_tensors="pt", truncation=True, padding="max_length", max_length=128)
+        inputs = self.tokenizer(text, return_tensors="pt", truncation=True, padding="max_length", max_length=256)  # increased max_length
         inputs = {k: v.to(self.device) for k, v in inputs.items()}
         self.model.eval()
         with torch.no_grad():
@@ -216,7 +214,7 @@ class TransformerAIModel:
             with open(filename, "rb") as f:
                 data = pickle.load(f)
             self.label_encoder = data["label_encoder"]
-            self.model = DistilBertForSequenceClassification.from_pretrained(data["model_dir"])
+            self.model = AutoModelForSequenceClassification.from_pretrained(data["model_dir"])
             self.model.to(self.device)
             self.is_trained = True
             logging.info(f"Transformer model loaded from {filename}")

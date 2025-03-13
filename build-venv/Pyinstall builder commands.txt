@@ -1,0 +1,5 @@
+pyinstaller --clean --onedir --name "AmazeSort" --path .venv\Lib\site-packages --add-data assets\*.ico:assets\ --add-data assets\splash.png:assets\splash.png --add-data assets\icons\*.png:assets\icons\ --icon assets\app_icon.ico --exclude-module torchvision --exclude-module torchaudio --exclude-module torch_directml --log-level=DEBUG --version-file app_version.txt --console --hidden-import=subprocess --hidden-import=torch._C --hidden-import=tensorflow app.py
+
+pyinstaller --clean --onedir --name "amazesort_gpu_setup" --path .venv\Lib\site-packages --add-data assets\*.ico:assets\ --icon assets\app_icon.ico --exclude-module torchvision --exclude-module torchaudio --exclude-module torch_directml --exclude-module torch --log-level=DEBUG --version-file app_version_gpu.txt --console installer.py
+
+pyinstaller --clean --onedir --name "amazesort_gpu_setup" --path .venv\Lib\site-packages --icon assets\app_icon.ico --exclude-module torch --exclude-module torchvision --exclude-module torchaudio --exclude-module torch_directml --version-file app_version_gpu.txt installer.py

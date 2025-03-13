@@ -1,0 +1,57 @@
+# -*- mode: python -*-
+import os
+from PyInstaller.utils.hooks import collect_submodules, collect_data_files
+
+block_cipher = None
+
+# Determine the application directory
+distpath = 'dist'  # Adjust if needed
+workpath = 'build'  # Adjust if needed
+
+# Collect only necessary hidden imports to reduce build size
+necessary_imports = [
+    'PySide6', 'scikit-learn', 'transformers', 'numpy', 'datasets',
+    'python-Levenshtein', 'sentencepiece', 'PyPDF2', 'fuzzywuzzy',
+    'pycryptodome', 'tf-keras', 'tensorflow', 'tqdm', 'accelerate'
+]
+hidden_imports = [mod for mod in collect_submodules('src') if mod in necessary_imports]
+
+# Include spaCy models and language data
+datas = collect_data_files('spacy', includes=['**/*.json', '**/*.dat', '**/*.txt', '**/*.bin'])
+
+# Define asset paths
+datas += [
+    ('assets/*.png', 'assets'),
+    ('assets/*.ico', 'assets'),
+    ('config/*.json', 'config'),  # Example: Including config files
+]
+
+a = Analysis(
+    ['src/app.py'],
+    pathex=[],
+    binaries=[],
+    datas=datas,
+    hiddenimports=hidden_imports,
+    hookspath=[],
+    hooksconfig={},
+    runtime_hooks=[],
+    cipher=block_cipher,
+)
+
+exe = EXE(
+    a.scripts,
+    name='AmazeSort',
+    icon='assets/app_icon.ico',
+    console=os.getenv('DEBUG_MODE', 'False') == 'True',  # Configurable debugging
+)
+
+coll = COLLECT(
+    exe,
+    a.binaries,
+    a.zipfiles,
+    a.datas,
+    strip=False,
+    upx=True,  # Compress executable size
+    upx_exclude=[],
+    name='AmazeSort',
+)
